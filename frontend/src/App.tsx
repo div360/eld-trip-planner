@@ -99,10 +99,10 @@ export default function App() {
                 Property-carrying driver, 70 h / 8-day cycle, no adverse conditions. Modeled fuel at least about every
                 1,000 trip miles; 1 h on-duty not driving at pickup and 1 h at dropoff.
               </p>
-              <p className="mx-auto mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-spotter-turquoise/55">
+              {/* <p className="mx-auto mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-spotter-turquoise/55">
                 <MapPinClusterIcon className="h-4 w-4 shrink-0 text-spotter-turquoise/50" />
                 Your form and last successful plan stay in this browser — refresh to restore.
-              </p>
+              </p> */}
             </div>
             <div
               className="text-eld-accent/75 motion-reduce:animate-none motion-safe:animate-icon-bob-delay motion-safe:opacity-90"
