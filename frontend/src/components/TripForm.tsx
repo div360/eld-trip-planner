@@ -45,7 +45,8 @@ export function TripForm(props: {
       <h2 className="mt-4 text-xl font-semibold tracking-tight text-white">Trip &amp; vehicle</h2>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-spotter-cream/65">
         Required fields match the daily log basics. Carrier, trailers, mileage overrides, and shipping details are
-        optional.
+        optional. Planning uses a US property-carrying 70 h / 8-day model (no adverse conditions), fuel about every
+        1,000 trip miles, and 1 h on-duty at pickup plus 1 h at dropoff — details repeat on your result summary.
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

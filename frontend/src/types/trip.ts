@@ -43,12 +43,24 @@ export interface TripStopDTO {
   detail?: string;
 }
 
+/** Mirrors backend `HosAssumptions` — rules used to build duty segments. */
+export interface HosAssumptionsDTO {
+  driver_category: string;
+  rolling_cycle: string;
+  adverse_driving_conditions: boolean;
+  pickup_on_duty_not_driving_hrs: number;
+  dropoff_on_duty_not_driving_hrs: number;
+  fuel_interval_trip_miles: number;
+  fuel_on_duty_not_driving_hrs_per_event: number;
+}
+
 export interface TripPlanResponse {
   route_polyline: string;
   stops: TripStopDTO[];
   daily_logs: DailyLogDTO[];
   total_distance_miles: number;
   total_trip_days: number;
+  hos_assumptions: HosAssumptionsDTO;
   sheet_inputs: TripSheetInputsDTO;
 }
 

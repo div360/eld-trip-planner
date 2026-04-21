@@ -11,9 +11,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from trips.schemas.trip_input import TripInput
-from trips.schemas.trip_output import TripOutput
+from trips.schemas.trip_output import HosAssumptions, TripOutput
 from trips.services.eld_service import build_daily_logs
-from trips.services.hos_service import HosSegment, plan_hos_segments
+from trips.services.hos_service import (
+    DROPOFF_ON,
+    FUEL_INTERVAL_MILES,
+    FUEL_ON_DUTY,
+    HosSegment,
+    PICKUP_ON,
+    plan_hos_segments,
+)
 from trips.services.route_service import compute_route
 from trips.utils.map_client import MapClientError, OpenRouteServiceClient
 from trips.utils.route_geometry import lat_lng_for_drive_fraction
@@ -86,7 +93,10 @@ def _build_stops(route, hos_segments: list[HosSegment]) -> list[dict[str, Any]]:
                 lat=pos[0] if pos else None,
                 lng=pos[1] if pos else None,
                 eta_hours=seg.start_h,
-                detail="On-duty fueling (30 minutes) — approximate map position along route",
+                detail=(
+                    f"On-duty fueling ({FUEL_ON_DUTY:g} h per stop) — at least every "
+                    f"~{FUEL_INTERVAL_MILES:.0f} mi trip miles — approximate map position along route"
+                ),
             )
         elif seg.status.value == "OFF" and ("10-hour" in seg.location or "30-minute" in seg.location):
             pos = lat_lng_for_drive_fraction(encoded, hos_segments, seg.start_h)
@@ -162,6 +172,15 @@ class PlanTripView(APIView):
             daily_logs=daily_logs,
             total_distance_miles=round(route.total_distance_miles, 2),
             total_trip_days=total_days,
+            hos_assumptions=HosAssumptions(
+                driver_category="US property-carrying driver (11 h drive / 14 h window)",
+                rolling_cycle="70-hour / 8-day limit (34 h restart when simulated cap reached)",
+                adverse_driving_conditions=False,
+                pickup_on_duty_not_driving_hrs=PICKUP_ON,
+                dropoff_on_duty_not_driving_hrs=DROPOFF_ON,
+                fuel_interval_trip_miles=FUEL_INTERVAL_MILES,
+                fuel_on_duty_not_driving_hrs_per_event=FUEL_ON_DUTY,
+            ),
             sheet_inputs=trip_in.model_dump(mode="json"),
         )
         return Response(out.model_dump(mode="json"))

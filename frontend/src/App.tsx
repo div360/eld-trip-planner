@@ -41,8 +41,8 @@ export default function App() {
           Route &amp; hours of service
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-spotter-cream/55">
-          Plan a load from current location through pickup to dropoff. Encoded route, stops &amp; rests, and daily log
-          sheets — property 70-hour / 8-day rules.
+          Property-carrying driver, 70 h / 8-day cycle, no adverse conditions. Modeled fuel at least about every 1,000
+          trip miles; 1 h on-duty not driving at pickup and 1 h at dropoff.
         </p>
       </header>
 
@@ -68,6 +68,26 @@ export default function App() {
                   {plan.total_trip_days === 1 ? "" : "s"} of logs
                 </p>
               </div>
+            </div>
+            <div className="mt-5 border-t border-white/10 pt-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-spotter-turquoise/80">
+                HOS model (this plan)
+              </p>
+              <ul className="mt-3 list-inside list-disc space-y-1.5 text-sm leading-relaxed text-spotter-cream/60">
+                <li>{plan.hos_assumptions.driver_category}</li>
+                <li>
+                  {plan.hos_assumptions.rolling_cycle}
+                  {plan.hos_assumptions.adverse_driving_conditions ? "" : " · adverse conditions not applied"}
+                </li>
+                <li>
+                  Fuel: {plan.hos_assumptions.fuel_on_duty_not_driving_hrs_per_event} h on-duty per fuel event; at least
+                  about every {plan.hos_assumptions.fuel_interval_trip_miles} mi of trip driving distance
+                </li>
+                <li>
+                  Pickup / dropoff: {plan.hos_assumptions.pickup_on_duty_not_driving_hrs} h and{" "}
+                  {plan.hos_assumptions.dropoff_on_duty_not_driving_hrs} h on-duty not driving (respectively)
+                </li>
+              </ul>
             </div>
           </div>
 
