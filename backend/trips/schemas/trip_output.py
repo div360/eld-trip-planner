@@ -33,3 +33,7 @@ class TripOutput(BaseModel):
     daily_logs: list[DailyLog] = Field(default_factory=list)
     total_distance_miles: float = 0.0
     total_trip_days: int = 0
+    sheet_inputs: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Echo of submitted trip/log header fields for rendering the daily log sheet",
+    )

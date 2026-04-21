@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { planTrip } from "./api/planTrip";
 import { DriversDailyLogSheet } from "./components/DriversDailyLogSheet";
 import { RouteMap } from "./components/RouteMap";
+import { StopsAndRestsList } from "./components/StopsAndRestsList";
 import { TripForm } from "./components/TripForm";
 import type { TripPlanRequest, TripPlanResponse } from "./types/trip";
 
@@ -9,7 +10,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<TripPlanResponse | null>(null);
-  const [lastTrip, setLastTrip] = useState<TripPlanRequest | null>(null);
 
   const onPlan = useCallback(async (body: TripPlanRequest) => {
     setLoading(true);
@@ -17,7 +17,6 @@ export default function App() {
     setPlan(null);
     try {
       const res = await planTrip(body);
-      setLastTrip(body);
       setPlan(res);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Request failed");
@@ -63,8 +62,11 @@ export default function App() {
           </div>
 
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-slate-800">Route &amp; stops</h3>
+            <h3 className="mb-3 text-sm font-semibold text-slate-800">Route, stops &amp; rests</h3>
             <RouteMap routePolyline={plan.route_polyline} stops={plan.stops} />
+            <div className="mt-4">
+              <StopsAndRestsList stops={plan.stops} />
+            </div>
           </div>
 
           <div>
@@ -74,9 +76,7 @@ export default function App() {
                 <div key={log.date}>
                   <DriversDailyLogSheet
                     log={log}
-                    fromLabel={lastTrip?.current_location ?? "—"}
-                    toLabel={lastTrip?.dropoff_location ?? "—"}
-                    currentCycleUsedHrs={lastTrip?.current_cycle_used_hrs}
+                    sheet={plan.sheet_inputs}
                     totalTripMiles={plan.total_distance_miles}
                   />
                 </div>

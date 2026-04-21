@@ -16,6 +16,7 @@ from trips.services.eld_service import build_daily_logs
 from trips.services.hos_service import HosSegment, plan_hos_segments
 from trips.services.route_service import compute_route
 from trips.utils.map_client import MapClientError, OpenRouteServiceClient
+from trips.utils.route_geometry import lat_lng_for_drive_fraction
 
 
 def _build_stops(route, hos_segments: list[HosSegment]) -> list[dict[str, Any]]:
@@ -74,33 +75,38 @@ def _build_stops(route, hos_segments: list[HosSegment]) -> list[dict[str, Any]]:
         eta_hours=dropoff_eta,
     )
 
+    encoded = route.encoded_polyline
+
     for seg in hos_segments:
         if "fuel" in seg.location.lower():
+            pos = lat_lng_for_drive_fraction(encoded, hos_segments, seg.start_h)
             append_stop(
                 kind="fuel",
                 label=seg.location,
-                lat=None,
-                lng=None,
+                lat=pos[0] if pos else None,
+                lng=pos[1] if pos else None,
                 eta_hours=seg.start_h,
-                detail="On-duty fueling (30 minutes)",
+                detail="On-duty fueling (30 minutes) — approximate map position along route",
             )
         elif seg.status.value == "OFF" and ("10-hour" in seg.location or "30-minute" in seg.location):
+            pos = lat_lng_for_drive_fraction(encoded, hos_segments, seg.start_h)
             append_stop(
                 kind="rest",
                 label=seg.location,
-                lat=None,
-                lng=None,
+                lat=pos[0] if pos else None,
+                lng=pos[1] if pos else None,
                 eta_hours=seg.start_h,
-                detail="Off-duty",
+                detail="Off-duty rest / break — approximate map position along route",
             )
         elif seg.status.value == "OFF" and "34-hour" in seg.location:
+            pos = lat_lng_for_drive_fraction(encoded, hos_segments, seg.start_h)
             append_stop(
                 kind="restart",
                 label=seg.location,
-                lat=None,
-                lng=None,
+                lat=pos[0] if pos else None,
+                lng=pos[1] if pos else None,
                 eta_hours=seg.start_h,
-                detail="34-hour restart",
+                detail="34-hour restart — approximate map position along route",
             )
 
     stops.sort(key=lambda x: (x["eta_hours_from_start"], x["type"]))
@@ -156,6 +162,7 @@ class PlanTripView(APIView):
             daily_logs=daily_logs,
             total_distance_miles=round(route.total_distance_miles, 2),
             total_trip_days=total_days,
+            sheet_inputs=trip_in.model_dump(mode="json"),
         )
         return Response(out.model_dump(mode="json"))
 

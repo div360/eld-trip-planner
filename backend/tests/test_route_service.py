@@ -14,6 +14,7 @@ def sample_trip() -> TripInput:
         pickup_location="B",
         dropoff_location="C",
         current_cycle_used_hrs=0.0,
+        truck_number="T-100",
     )
 
 

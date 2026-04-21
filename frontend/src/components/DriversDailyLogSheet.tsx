@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { DailyLogDTO, DutyStatusCode } from "../types/trip";
+import type { DailyLogDTO, DutyStatusCode, TripSheetInputsDTO } from "../types/trip";
 import { buildDutyLinePath, DUTY_ROW_ORDER, hoursByStatus } from "../utils/dutyGraphPath";
 
 const LABELS: Record<DutyStatusCode, string> = {
@@ -9,7 +9,6 @@ const LABELS: Record<DutyStatusCode, string> = {
   ON: "On Duty (not driving)",
 };
 
-/** Hours 0–23 labels like the paper (midnight … noon … midnight) */
 const HOUR_LABELS = [
   "Mid\nnight",
   "1",
@@ -40,28 +39,33 @@ const HOUR_LABELS = [
 
 type SheetProps = {
   log: DailyLogDTO;
-  /** Trip context for header “From / To” and recap context */
-  fromLabel: string;
-  toLabel: string;
-  /** Shown in recap area as “cycle used” hint */
-  currentCycleUsedHrs?: number;
-  /** Whole-trip miles (we don’t have per-day miles from API yet) */
-  totalTripMiles?: number;
+  sheet: TripSheetInputsDTO;
+  /** Planned route miles (used if sheet has no mileage override) */
+  totalTripMiles: number;
 };
 
+function fmt(v: string | null | undefined): string {
+  const t = (v ?? "").trim();
+  return t.length > 0 ? t : "—";
+}
+
 /**
- * One printable daily sheet modeled on the blank “Driver’s Daily Log (24 hours)” form:
- * header → 24h grid with 15-minute ticks → total hours column → remarks → recap placeholders.
- * The duty graph uses a single continuous stroke (filled example style), not only bars.
+ * Paper-style daily log: header (date, route, carrier, truck/trailer, miles), graph, remarks + shipping, recap.
  */
 export function DriversDailyLogSheet(props: SheetProps) {
-  const { log } = props;
+  const { log, sheet } = props;
 
   const byStatus = useMemo(() => hoursByStatus(log.segments), [log.segments]);
   const total24 = useMemo(
     () => DUTY_ROW_ORDER.reduce((s, k) => s + byStatus[k], 0),
     [byStatus]
   );
+  const onDutyLines34 = byStatus.D + byStatus.ON;
+
+  /** Illustrative only — not a legal FMCSA rolling total without prior days’ logs */
+  const recapA = sheet.current_cycle_used_hrs + onDutyLines34;
+  const recapB70 = Math.max(0, 70 - recapA);
+  const recapB60 = Math.max(0, 60 - recapA);
 
   const remarks = useMemo(() => {
     const lines: { t: string; text: string }[] = [];
@@ -108,12 +112,19 @@ export function DriversDailyLogSheet(props: SheetProps) {
   const mm = dateParts[1] ?? "";
   const dd = dateParts[2] ?? "";
 
+  const milesDriving =
+    sheet.total_miles_driving_today != null && sheet.total_miles_driving_today > 0
+      ? sheet.total_miles_driving_today
+      : props.totalTripMiles;
+  const milesTotal =
+    sheet.total_mileage_today != null && sheet.total_mileage_today > 0 ? sheet.total_mileage_today : null;
+
   return (
     <article className="overflow-x-auto rounded-2xl border-2 border-slate-800 bg-white text-slate-900 shadow-md print:shadow-none print:border-black">
-      {/* —— Header (template block 1) —— */}
+      {/* Header */}
       <header className="border-b-2 border-slate-800 px-3 py-2 print:px-2">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="text-sm font-bold leading-tight sm:text-base">Driver&apos;s Daily Log (24 hours)</h2>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
               <span className="font-medium">Date</span>
@@ -126,41 +137,68 @@ export function DriversDailyLogSheet(props: SheetProps) {
             <div className="mt-2 grid max-w-md gap-1 text-xs">
               <div className="flex gap-2 border-b border-slate-400">
                 <span className="shrink-0 font-medium">From:</span>
-                <span className="min-w-0 flex-1 truncate">{props.fromLabel}</span>
+                <span className="min-w-0 flex-1 truncate">{fmt(sheet.current_location)}</span>
               </div>
               <div className="flex gap-2 border-b border-slate-400">
                 <span className="shrink-0 font-medium">To:</span>
-                <span className="min-w-0 flex-1 truncate">{props.toLabel}</span>
+                <span className="min-w-0 flex-1 truncate">{fmt(sheet.dropoff_location)}</span>
               </div>
             </div>
           </div>
-          <div className="min-w-[200px] max-w-sm flex-1 text-xs">
-            <p className="border-b border-slate-400 py-0.5">
-              <span className="font-medium">Carrier</span> <span className="text-slate-600">(optional)</span>
-            </p>
-            <p className="border-b border-slate-400 py-0.5">Main office address</p>
-            <p className="border-b border-slate-400 py-0.5">Home terminal address</p>
-          </div>
+          <p className="max-w-[220px] text-[9px] leading-snug text-slate-600">
+            Original — file at home terminal. Duplicate — driver retains in their possession for 8 days.
+          </p>
         </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded border border-slate-800 px-2 py-1">
               Total miles driving today:{" "}
-              <span className="font-mono tabular-nums">
-                {props.totalTripMiles != null ? props.totalTripMiles.toFixed(0) : "—"}
-              </span>
+              <span className="font-mono tabular-nums">{milesDriving.toFixed(0)}</span>
             </span>
             <span className="rounded border border-slate-800 px-2 py-1">
-              Total mileage today: <span className="font-mono text-slate-500">—</span>
+              Total mileage today:{" "}
+              <span className="font-mono tabular-nums">{milesTotal != null ? milesTotal.toFixed(0) : "—"}</span>
             </span>
           </div>
-          <p className="text-[10px] leading-snug text-slate-600">
-            Truck/tractor & trailer numbers or plates/state — use employer format when printing.
+          <div className="rounded border border-slate-800 px-2 py-1 text-[10px] leading-snug">
+            <span className="font-medium">Truck / tractor:</span>{" "}
+            <span className="font-mono">{fmt(sheet.truck_number)}</span>
+            {(sheet.trailer_number ?? "").trim() || (sheet.trailer_number_2 ?? "").trim() ? (
+              <>
+                {" "}
+                <span className="text-slate-500">|</span> Trailer(s):{" "}
+                <span className="font-mono">
+                  {[sheet.trailer_number, sheet.trailer_number_2].filter((t) => (t ?? "").trim()).join(" / ") || "—"}
+                </span>
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-3 text-xs">
+          <p className="font-medium text-slate-800">Truck/tractor and trailer numbers or license plate(s)/state (each unit)</p>
+          <p className="mt-1 min-h-[2rem] rounded border border-slate-300 bg-slate-50 px-2 py-1 font-mono text-[11px]">
+            {fmt(sheet.truck_number)}
+            {(sheet.trailer_number ?? "").trim() ? ` · Trl ${sheet.trailer_number}` : ""}
+            {(sheet.trailer_number_2 ?? "").trim() ? ` · Trl ${sheet.trailer_number_2}` : ""}
+          </p>
+        </div>
+
+        <div className="mt-3 grid gap-1 text-xs">
+          <p className="border-b border-slate-400 py-0.5">
+            <span className="font-medium">Name of carrier or carriers:</span> {fmt(sheet.carrier_name)}
+          </p>
+          <p className="border-b border-slate-400 py-0.5">
+            <span className="font-medium">Main office address:</span> {fmt(sheet.carrier_main_office)}
+          </p>
+          <p className="border-b border-slate-400 py-0.5">
+            <span className="font-medium">Home terminal address:</span> {fmt(sheet.carrier_home_terminal)}
           </p>
         </div>
       </header>
 
-      {/* —— Grid + continuous line (template block 2) —— */}
+      {/* Grid */}
       <div className="border-b-2 border-slate-800">
         <div className="bg-slate-900 py-1 text-center text-[10px] font-semibold uppercase tracking-wide text-white">
           Graph: time (home terminal) · 15-minute marks within each hour
@@ -181,7 +219,6 @@ export function DriversDailyLogSheet(props: SheetProps) {
               aria-label={`Duty status graph for ${log.date}`}
             >
               <g transform={`translate(${gridLeft},0)`}>
-                {/* Hour lines */}
                 {Array.from({ length: 25 }, (_, hr) => (
                   <line
                     key={hr}
@@ -193,7 +230,6 @@ export function DriversDailyLogSheet(props: SheetProps) {
                     strokeWidth={hr % 6 === 0 ? 1.2 : 0.6}
                   />
                 ))}
-                {/* 15-minute ticks (lighter between hours) */}
                 {Array.from({ length: 24 }, (_, hr) =>
                   [1, 2, 3].map((q) => (
                     <line
@@ -207,7 +243,6 @@ export function DriversDailyLogSheet(props: SheetProps) {
                     />
                   ))
                 )}
-                {/* Row guides */}
                 {DUTY_ROW_ORDER.map((_, i) => (
                   <line
                     key={i}
@@ -219,7 +254,6 @@ export function DriversDailyLogSheet(props: SheetProps) {
                     strokeWidth={0.8}
                   />
                 ))}
-                {/* Duty line */}
                 {linePath ? (
                   <path
                     d={linePath}
@@ -231,7 +265,6 @@ export function DriversDailyLogSheet(props: SheetProps) {
                   />
                 ) : null}
               </g>
-              {/* Hour labels */}
               {HOUR_LABELS.map((lab, hr) => (
                 <text
                   key={hr}
@@ -250,11 +283,13 @@ export function DriversDailyLogSheet(props: SheetProps) {
               ))}
             </svg>
           </div>
-          {/* Total hours column */}
           <div className="flex w-14 shrink-0 flex-col justify-around border-l border-slate-800 bg-slate-50 py-1 text-center">
-            <div className="text-[9px] font-semibold leading-tight text-slate-600">Total hrs</div>
+            <div className="text-[9px] font-semibold leading-tight text-slate-600">Total Hours</div>
             {DUTY_ROW_ORDER.map((code) => (
-              <div key={code} className="flex h-[55px] flex-col items-center justify-center border-t border-slate-300 text-xs">
+              <div
+                key={code}
+                className="flex h-[55px] flex-col items-center justify-center border-t border-slate-300 text-xs"
+              >
                 <span className="font-mono tabular-nums">{byStatus[code].toFixed(2)}</span>
               </div>
             ))}
@@ -265,22 +300,14 @@ export function DriversDailyLogSheet(props: SheetProps) {
         </div>
       </div>
 
-      {/* —— Remarks (template block 3) —— */}
+      {/* Remarks + shipping */}
       <section className="border-b-2 border-slate-800 px-3 py-2">
         <h3 className="text-sm font-bold">Remarks</h3>
         <p className="text-[10px] text-slate-600">
-          Enter place reported, released from work, and when/where each duty change occurred (home terminal time), per{" "}
-          <a
-            className="text-eld-teal underline"
-            href="https://www.wikihow.com/Fill-a-Log-Book"
-            target="_blank"
-            rel="noreferrer"
-          >
-            standard log practice
-          </a>
-          .
+          Enter name of place you reported and where released from work and when and where each change of duty occurred.
+          Use time standard of home terminal.
         </p>
-        <ul className="mt-2 min-h-[72px] list-inside list-disc text-xs leading-relaxed">
+        <ul className="mt-2 min-h-[56px] list-inside list-disc text-xs leading-relaxed">
           {remarks.length === 0 ? (
             <li className="text-slate-400">No location labels on segments for this day.</li>
           ) : (
@@ -291,31 +318,65 @@ export function DriversDailyLogSheet(props: SheetProps) {
             ))
           )}
         </ul>
-        <div className="mt-2 grid gap-1 text-[10px] text-slate-600 sm:grid-cols-2">
-          <span>Shipping / manifest / shipper &amp; commodity — optional</span>
+        <div className="mt-3 grid gap-2 border border-slate-300 bg-slate-50 p-2 text-xs sm:grid-cols-2">
+          <div>
+            <p className="font-semibold">Shipping documents</p>
+            <p className="mt-1 text-[10px] text-slate-600">DVL or manifest no. or</p>
+            <p className="mt-1 min-h-[1.5rem] border-b border-slate-400 font-mono">{fmt(sheet.shipping_manifest)}</p>
+          </div>
+          <div>
+            <p className="font-semibold">Shipper &amp; commodity</p>
+            <p className="mt-1 min-h-[2.5rem] border-b border-slate-400">{fmt(sheet.shipper_commodity)}</p>
+          </div>
         </div>
       </section>
 
-      {/* —— Recap (template block 4) — simplified vs full paper */}
-      <footer className="px-3 py-2 text-[10px] leading-snug">
-        <p className="font-semibold">Recap — 70 hour / 8 day (property)</p>
-        <div className="mt-1 grid gap-2 sm:grid-cols-3">
-          <p>
-            <span className="font-medium">Cycle used (input):</span>{" "}
-            {props.currentCycleUsedHrs != null ? (
-              <span className="font-mono">{props.currentCycleUsedHrs.toFixed(1)} h</span>
-            ) : (
-              "—"
-            )}
-          </p>
-          <p>
-            <span className="font-medium">On-duty today (lines Driving + On duty):</span>{" "}
-            <span className="font-mono">{(byStatus.D + byStatus.ON).toFixed(2)} h</span>
-          </p>
-          <p className="text-slate-600">
-            Full paper recap (A/B/C boxes) needs multi-day history; this app shows today&apos;s graph + trip context.
-          </p>
+      {/* Recap — matches blank form structure */}
+      <footer className="px-3 py-3 text-[10px] leading-snug">
+        <p className="text-xs font-bold">Recap: Complete at end of day</p>
+        <div className="mt-2 grid gap-2 border border-slate-800 sm:grid-cols-2">
+          <div className="border-slate-800 p-2 sm:border-r">
+            <p className="text-center font-bold">70 Hour / 8 Day Drivers</p>
+            <p className="mt-2 border-b border-slate-300 py-1">
+              On-duty hours today, total lines 3 &amp; 4 (Driving + On duty not driving):{" "}
+              <span className="font-mono font-semibold">{onDutyLines34.toFixed(2)}</span> h
+            </p>
+            <p className="mt-2 border-b border-slate-200 py-1">
+              <span className="font-medium">A.</span> Total hours on duty last 8 days including today (illustrative):{" "}
+              <span className="font-mono">{recapA.toFixed(2)}</span> h
+            </p>
+            <p className="mt-1 border-b border-slate-200 py-1">
+              <span className="font-medium">B.</span> Total hours available tomorrow (70 hr − A*):{" "}
+              <span className="font-mono">{recapB70.toFixed(2)}</span> h
+            </p>
+            <p className="mt-1 py-1">
+              <span className="font-medium">C.</span> Total on duty last 5 days including today:{" "}
+              <span className="text-slate-500">— (needs prior daily logs)</span>
+            </p>
+          </div>
+          <div className="p-2">
+            <p className="text-center font-bold">60 Hour / 7 Day Drivers</p>
+            <p className="mt-2 border-b border-slate-200 py-1">
+              <span className="font-medium">A.</span> Total hours on duty last 3 days including today:{" "}
+              <span className="text-slate-500">— (needs prior logs)</span>
+            </p>
+            <p className="mt-1 border-b border-slate-200 py-1">
+              <span className="font-medium">B.</span> Total hours available tomorrow (60 hr − A*):{" "}
+              <span className="font-mono">{recapB60.toFixed(2)}</span> h <span className="text-slate-500">(if A = illustrative above)</span>
+            </p>
+            <p className="mt-1 py-1">
+              <span className="font-medium">C.</span> Total on duty last 7 days including today:{" "}
+              <span className="text-slate-500">— (needs prior logs)</span>
+            </p>
+          </div>
         </div>
+        <p className="mt-2 text-right text-[9px] text-slate-600">
+          *If you took 34 consecutive hours off duty you have 60/70 hours available.
+        </p>
+        <p className="mt-2 text-[9px] text-slate-500">
+          *Illustrative A/B: uses cycle-at-trip-start + this day&apos;s lines 3–4; not a substitute for FMCSA rolling
+          totals or carrier rules.
+        </p>
       </footer>
     </article>
   );
