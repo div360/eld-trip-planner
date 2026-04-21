@@ -131,6 +131,28 @@ class HealthView(APIView):
         return Response({"status": "ok"})
 
 
+class PlacesAutocompleteView(APIView):
+    """ORS geocode search for address UI — returns suggestions only (no API key in client)."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    def get(self, request: Request) -> Response:
+        q = (request.query_params.get("q") or "").strip()
+        if len(q) < 2:
+            return Response({"results": []})
+        try:
+            client = OpenRouteServiceClient()
+            rows = client.geocode_search(q, limit=10)
+        except MapClientError as exc:
+            return Response({"results": [], "search_error": str(exc)})
+        return Response(
+            {
+                "results": [{"label": r.label, "lat": r.lat, "lng": r.lng} for r in rows],
+            }
+        )
+
+
 class PlanTripView(APIView):
     authentication_classes: list = []
     permission_classes: list = []

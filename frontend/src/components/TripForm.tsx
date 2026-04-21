@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import type { TripPlanRequest } from "../types/trip";
+import { LocationCombobox } from "./LocationCombobox";
 
 function emptyForm(): TripPlanRequest {
   return {
@@ -26,9 +27,17 @@ export function TripForm(props: {
   onSubmit: (values: TripPlanRequest) => void;
 }) {
   const [values, setValues] = useState<TripPlanRequest>(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const missing =
+      !values.current_location.trim() || !values.pickup_location.trim() || !values.dropoff_location.trim();
+    if (missing) {
+      setFormError("Choose current, pickup, and dropoff locations from the search suggestions — plain text is not used.");
+      return;
+    }
+    setFormError(null);
     props.onSubmit(values);
   }
 
@@ -49,46 +58,44 @@ export function TripForm(props: {
         1,000 trip miles, and 1 h on-duty at pickup plus 1 h at dropoff — details repeat on your result summary.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <label className="block sm:col-span-2">
-          <span className="ui-label-dark">
-            Current location <span className="text-eld-accent">*</span>
-          </span>
-          <input
+      <p className="mt-4 max-w-2xl text-xs leading-relaxed text-spotter-cream/50">
+        Locations use live search (after two characters). Select a row from the dropdown — what you type without
+        choosing a suggestion is not sent to routing.
+      </p>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <LocationCombobox
+            label="Current location"
             required
-            className="ui-input-dark"
             value={values.current_location}
-            onChange={(e) => setValues({ ...values, current_location: e.target.value })}
-            placeholder="City or address"
-            autoComplete="off"
+            onChange={(label) => {
+              setFormError(null);
+              setValues({ ...values, current_location: label });
+            }}
+            placeholder="Search city or street address"
           />
-        </label>
-        <label className="block">
-          <span className="ui-label-dark">
-            Pickup location <span className="text-eld-accent">*</span>
-          </span>
-          <input
-            required
-            className="ui-input-dark"
-            value={values.pickup_location}
-            onChange={(e) => setValues({ ...values, pickup_location: e.target.value })}
-            placeholder="Pickup city or address"
-            autoComplete="off"
-          />
-        </label>
-        <label className="block">
-          <span className="ui-label-dark">
-            Dropoff location <span className="text-eld-accent">*</span>
-          </span>
-          <input
-            required
-            className="ui-input-dark"
-            value={values.dropoff_location}
-            onChange={(e) => setValues({ ...values, dropoff_location: e.target.value })}
-            placeholder="Dropoff city or address"
-            autoComplete="off"
-          />
-        </label>
+        </div>
+        <LocationCombobox
+          label="Pickup location"
+          required
+          value={values.pickup_location}
+          onChange={(label) => {
+            setFormError(null);
+            setValues({ ...values, pickup_location: label });
+          }}
+          placeholder="Search pickup address"
+        />
+        <LocationCombobox
+          label="Dropoff location"
+          required
+          value={values.dropoff_location}
+          onChange={(label) => {
+            setFormError(null);
+            setValues({ ...values, dropoff_location: label });
+          }}
+          placeholder="Search dropoff address"
+        />
         <label className="block sm:col-span-2">
           <span className="ui-label-dark">
             Current cycle used (hours) <span className="text-eld-accent">*</span>
@@ -247,6 +254,15 @@ export function TripForm(props: {
           </label>
         </div>
       </details>
+
+      {formError ? (
+        <div
+          role="alert"
+          className="mt-6 rounded-xl border border-amber-500/35 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-100/95"
+        >
+          {formError}
+        </div>
+      ) : null}
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
