@@ -1,9 +1,6 @@
-export type PlaceSuggestion = { label: string; lat: number; lng: number };
+import { getApiBaseUrl } from "./apiBaseUrl";
 
-function apiBase(): string {
-  const v = import.meta.env.VITE_API_BASE_URL;
-  return (typeof v === "string" && v.length > 0 ? v : "http://127.0.0.1:8000").replace(/\/$/, "");
-}
+export type PlaceSuggestion = { label: string; lat: number; lng: number };
 
 export type AutocompleteResponse = {
   results: PlaceSuggestion[];
@@ -15,7 +12,7 @@ export async function fetchPlaceSuggestions(query: string): Promise<Autocomplete
   if (q.length < 2) {
     return { results: [] };
   }
-  const url = `${apiBase()}/api/places/autocomplete/?q=${encodeURIComponent(q)}`;
+  const url = `${getApiBaseUrl()}/api/places/autocomplete/?q=${encodeURIComponent(q)}`;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   const data: unknown = await res.json().catch(() => ({}));
   if (!res.ok || typeof data !== "object" || data === null) {

@@ -108,12 +108,27 @@ REST_FRAMEWORK = {
     ],
 }
 
-CORS_ALLOWED_ORIGINS = env.list(
-    "CORS_ALLOWED_ORIGINS",
-    default=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+def _normalize_cors_origins(origins: list[str]) -> list[str]:
+    """
+    django-cors-headers E014: origins must not end with '/' (that is treated as a path).
+    Railway/Vercel copy-paste often includes a trailing slash — strip it.
+    """
+    out: list[str] = []
+    for o in origins:
+        s = str(o).strip().rstrip("/")
+        if s:
+            out.append(s)
+    return out
+
+
+CORS_ALLOWED_ORIGINS = _normalize_cors_origins(
+    env.list(
+        "CORS_ALLOWED_ORIGINS",
+        default=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+    )
 )
 
 # If ORS_API_KEY is set but empty in the process env, django-environ leaves it empty and

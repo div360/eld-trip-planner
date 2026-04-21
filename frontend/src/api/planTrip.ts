@@ -1,12 +1,8 @@
 import type { TripPlanRequest, TripPlanResponse } from "../types/trip";
-
-function apiBase(): string {
-  const v = import.meta.env.VITE_API_BASE_URL;
-  return (typeof v === "string" && v.length > 0 ? v : "http://127.0.0.1:8000").replace(/\/$/, "");
-}
+import { getApiBaseUrl } from "./apiBaseUrl";
 
 export async function planTrip(body: TripPlanRequest): Promise<TripPlanResponse> {
-  const url = `${apiBase()}/api/trips/plan/`;
+  const url = `${getApiBaseUrl()}/api/trips/plan/`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
