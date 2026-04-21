@@ -1,7 +1,12 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TripPlanRequest } from "../types/trip";
+import { loadPersistedForm, savePersistedForm } from "../utils/tripPersist";
 import { LocationCombobox } from "./LocationCombobox";
+
+function mergeForm(stored: Partial<TripPlanRequest>): TripPlanRequest {
+  return { ...emptyForm(), ...stored };
+}
 
 function emptyForm(): TripPlanRequest {
   return {
@@ -26,8 +31,18 @@ export function TripForm(props: {
   loading: boolean;
   onSubmit: (values: TripPlanRequest) => void;
 }) {
-  const [values, setValues] = useState<TripPlanRequest>(emptyForm);
+  const [values, setValues] = useState<TripPlanRequest>(() => {
+    const s = loadPersistedForm();
+    return s ? mergeForm(s) : emptyForm();
+  });
   const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      savePersistedForm(values);
+    }, 450);
+    return () => window.clearTimeout(t);
+  }, [values]);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();

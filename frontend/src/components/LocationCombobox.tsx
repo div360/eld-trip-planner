@@ -13,6 +13,25 @@ type Props = {
   placeholder?: string;
 };
 
+function Spinner() {
+  return (
+    <svg
+      className="h-4 w-4 animate-spin text-spotter-turquoise"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path
+        className="opacity-90"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+}
+
 /**
  * Address field backed by ORS search: typing queries the API; the submitted value is only
  * set when a row is chosen from the dropdown (arbitrary text is not kept as a location).
@@ -25,6 +44,7 @@ export function LocationCombobox(props: Props) {
 
   const [text, setText] = useState(value);
   const [open, setOpen] = useState(false);
+  const [debouncing, setDebouncing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<PlaceSuggestion[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -34,6 +54,8 @@ export function LocationCombobox(props: Props) {
   const requestId = useRef(0);
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const busy = debouncing || loading;
+
   useEffect(() => {
     if (value) {
       setText(value);
@@ -41,6 +63,7 @@ export function LocationCombobox(props: Props) {
   }, [value]);
 
   const runSearch = useCallback(async (q: string) => {
+    setDebouncing(false);
     const my = ++requestId.current;
     setLoading(true);
     setSearchError(null);
@@ -79,11 +102,15 @@ export function LocationCombobox(props: Props) {
     }
     const q = raw.trim();
     if (q.length < 2) {
+      setDebouncing(false);
+      setLoading(false);
       setResults([]);
       setOpen(false);
       setSearchError(null);
       return;
     }
+    setDebouncing(true);
+    setOpen(true);
     debounceRef.current = setTimeout(() => {
       void runSearch(raw.trim());
     }, 320);
@@ -94,6 +121,7 @@ export function LocationCombobox(props: Props) {
       onChange(row.label);
       setText(row.label);
       setOpen(false);
+      setDebouncing(false);
       setResults([]);
       setSearchError(null);
     },
@@ -111,7 +139,7 @@ export function LocationCombobox(props: Props) {
   }, []);
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && open && loading) {
+    if (e.key === "Enter" && open && busy) {
       e.preventDefault();
       return;
     }
@@ -138,25 +166,37 @@ export function LocationCombobox(props: Props) {
         <span className="ui-label-dark">
           {label} {required ? <span className="text-eld-accent">*</span> : null}
         </span>
-        <input
-          id={inputId}
-          type="text"
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          autoComplete="off"
-          className="ui-input-dark"
-          value={text}
-          placeholder={placeholder}
-          onChange={(e) => onInputChange(e.target.value)}
-          onFocus={() => {
-            if (results.length > 0) {
-              setOpen(true);
-            }
-          }}
-          onKeyDown={onKeyDown}
-        />
+        <div className="relative mt-1">
+          <input
+            id={inputId}
+            type="text"
+            role="combobox"
+            aria-expanded={open}
+            aria-busy={busy}
+            aria-controls={listId}
+            aria-autocomplete="list"
+            autoComplete="off"
+            className="ui-input-dark pr-10"
+            value={text}
+            placeholder={placeholder}
+            onChange={(e) => onInputChange(e.target.value)}
+            onFocus={() => {
+              if (text.trim().length >= 2 && (results.length > 0 || busy)) {
+                setOpen(true);
+              }
+            }}
+            onKeyDown={onKeyDown}
+          />
+          {busy ? (
+            <span
+              className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 text-[11px] text-spotter-cream/50"
+              aria-live="polite"
+            >
+              <Spinner />
+              <span className="hidden sm:inline">{debouncing ? "Waiting…" : "Loading…"}</span>
+            </span>
+          ) : null}
+        </div>
       </label>
       {open ? (
         <ul
@@ -164,8 +204,16 @@ export function LocationCombobox(props: Props) {
           role="listbox"
           className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-xl border border-white/15 bg-spotter-deep/95 py-1 text-sm shadow-lg backdrop-blur-md ring-1 ring-white/10"
         >
-          {loading ? (
-            <li className="px-3 py-2 text-spotter-cream/50">Searching…</li>
+          {debouncing ? (
+            <li className="flex items-center gap-2 px-3 py-2.5 text-spotter-cream/70">
+              <Spinner />
+              <span>Waiting for search…</span>
+            </li>
+          ) : loading ? (
+            <li className="flex items-center gap-2 px-3 py-2.5 text-spotter-cream/70">
+              <Spinner />
+              <span>Loading suggestions…</span>
+            </li>
           ) : searchError ? (
             <li className="px-3 py-2 text-amber-200/90">{searchError}</li>
           ) : results.length === 0 ? (
