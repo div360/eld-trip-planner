@@ -35,21 +35,27 @@ export function TripForm(props: {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-eld-teal/25 bg-white/90 p-6 shadow-eld backdrop-blur"
+      className="rounded-3xl border border-white/10 bg-spotter-surface/45 p-6 shadow-glass backdrop-blur-xl sm:p-8"
     >
-      <h2 className="text-lg font-semibold text-eld-teal">Trip &amp; vehicle</h2>
-      <p className="mt-1 text-sm text-slate-600">
-        Required fields match the daily log basics. Carrier, trailers, mileage overrides, and shipping details are optional.
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="ui-pill">Inputs</span>
+        <span className="ui-pill">70h / 8-day</span>
+        <span className="ui-pill">FMCSA</span>
+      </div>
+      <h2 className="mt-4 text-xl font-semibold tracking-tight text-white">Trip &amp; vehicle</h2>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-spotter-cream/65">
+        Required fields match the daily log basics. Carrier, trailers, mileage overrides, and shipping details are
+        optional.
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <label className="block sm:col-span-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="ui-label-dark">
             Current location <span className="text-eld-accent">*</span>
           </span>
           <input
             required
-            className="mt-1 w-full rounded-xl border border-eld-mist bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+            className="ui-input-dark"
             value={values.current_location}
             onChange={(e) => setValues({ ...values, current_location: e.target.value })}
             placeholder="City or address"
@@ -57,12 +63,12 @@ export function TripForm(props: {
           />
         </label>
         <label className="block">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="ui-label-dark">
             Pickup location <span className="text-eld-accent">*</span>
           </span>
           <input
             required
-            className="mt-1 w-full rounded-xl border border-eld-mist bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+            className="ui-input-dark"
             value={values.pickup_location}
             onChange={(e) => setValues({ ...values, pickup_location: e.target.value })}
             placeholder="Pickup city or address"
@@ -70,12 +76,12 @@ export function TripForm(props: {
           />
         </label>
         <label className="block">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="ui-label-dark">
             Dropoff location <span className="text-eld-accent">*</span>
           </span>
           <input
             required
-            className="mt-1 w-full rounded-xl border border-eld-mist bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+            className="ui-input-dark"
             value={values.dropoff_location}
             onChange={(e) => setValues({ ...values, dropoff_location: e.target.value })}
             placeholder="Dropoff city or address"
@@ -83,7 +89,7 @@ export function TripForm(props: {
           />
         </label>
         <label className="block sm:col-span-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="ui-label-dark">
             Current cycle used (hours) <span className="text-eld-accent">*</span>
           </span>
           <input
@@ -92,22 +98,22 @@ export function TripForm(props: {
             min={0}
             max={69.99}
             step={0.1}
-            className="mt-1 w-full max-w-xs rounded-xl border border-eld-mist bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+            className="ui-input-dark max-w-xs"
             value={Number.isNaN(values.current_cycle_used_hrs) ? "" : values.current_cycle_used_hrs}
             onChange={(e) =>
               setValues({ ...values, current_cycle_used_hrs: Number.parseFloat(e.target.value) || 0 })
             }
           />
-          <span className="ml-2 text-xs text-slate-500">0 – &lt;70 (FMCSA 70-hour window)</span>
+          <span className="ml-2 text-xs text-spotter-cream/45">0 – &lt;70 (FMCSA 70-hour window)</span>
         </label>
 
         <label className="block sm:col-span-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="ui-label-dark">
             Truck / tractor number <span className="text-eld-accent">*</span>
           </span>
           <input
             required
-            className="mt-1 w-full max-w-md rounded-xl border border-eld-mist bg-white px-3 py-2 font-mono text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+            className="ui-input-dark max-w-md font-mono"
             value={values.truck_number}
             onChange={(e) => setValues({ ...values, truck_number: e.target.value })}
             placeholder="e.g. 6788"
@@ -116,58 +122,58 @@ export function TripForm(props: {
         </label>
       </div>
 
-      <details className="mt-6 rounded-xl border border-eld-mist bg-eld-mist/30 p-4">
-        <summary className="cursor-pointer text-sm font-semibold text-eld-teal">
+      <details className="mt-6 rounded-2xl border border-white/10 bg-spotter-deep/50 p-4 backdrop-blur-sm">
+        <summary className="cursor-pointer text-sm font-semibold text-spotter-turquoise">
           Advanced — carrier, trailers, mileage, shipping
         </summary>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block sm:col-span-2">
-            <span className="text-sm font-medium text-slate-700">Name of carrier or carriers</span>
+            <span className="ui-label-dark">Name of carrier or carriers</span>
             <input
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark"
               value={values.carrier_name ?? ""}
               onChange={(e) => setValues({ ...values, carrier_name: e.target.value })}
             />
           </label>
           <label className="block sm:col-span-2">
-            <span className="text-sm font-medium text-slate-700">Main office address</span>
+            <span className="ui-label-dark">Main office address</span>
             <input
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark"
               value={values.carrier_main_office ?? ""}
               onChange={(e) => setValues({ ...values, carrier_main_office: e.target.value })}
             />
           </label>
           <label className="block sm:col-span-2">
-            <span className="text-sm font-medium text-slate-700">Home terminal address</span>
+            <span className="ui-label-dark">Home terminal address</span>
             <input
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark"
               value={values.carrier_home_terminal ?? ""}
               onChange={(e) => setValues({ ...values, carrier_home_terminal: e.target.value })}
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">Trailer number (1)</span>
+            <span className="ui-label-dark">Trailer number (1)</span>
             <input
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 font-mono text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark font-mono"
               value={values.trailer_number ?? ""}
               onChange={(e) => setValues({ ...values, trailer_number: e.target.value })}
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">Trailer number (2)</span>
+            <span className="ui-label-dark">Trailer number (2)</span>
             <input
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 font-mono text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark font-mono"
               value={values.trailer_number_2 ?? ""}
               onChange={(e) => setValues({ ...values, trailer_number_2: e.target.value })}
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">Total miles driving today (override)</span>
+            <span className="ui-label-dark">Total miles driving today (override)</span>
             <input
               type="number"
               min={0}
               step={1}
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark"
               value={values.total_miles_driving_today ?? ""}
               onChange={(e) => {
                 const v = e.target.value;
@@ -180,12 +186,12 @@ export function TripForm(props: {
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">Total mileage today</span>
+            <span className="ui-label-dark">Total mileage today</span>
             <input
               type="number"
               min={0}
               step={1}
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark"
               value={values.total_mileage_today ?? ""}
               onChange={(e) => {
                 const v = e.target.value;
@@ -197,43 +203,43 @@ export function TripForm(props: {
             />
           </label>
 
-          <div className="sm:col-span-2 rounded-xl border border-dashed border-eld-teal/50 bg-white/90 p-3 text-[11px] leading-relaxed text-slate-700">
-            <p className="font-semibold text-eld-teal">How these miles differ</p>
-            <ul className="mt-2 list-disc space-y-1.5 pl-4 marker:text-eld-teal">
+          <div className="sm:col-span-2 rounded-xl border border-dashed border-spotter-turquoise/35 bg-spotter-deep/40 p-4 text-[11px] leading-relaxed text-spotter-cream/80">
+            <p className="font-semibold text-spotter-turquoise">How these miles differ</p>
+            <ul className="mt-2 list-disc space-y-1.5 pl-4 marker:text-spotter-turquoise/80">
               <li>
-                <strong>Total miles driving today</strong> — miles <em>you</em> drove this shift (solo). Often the number
-                you put by the truck/trailer line on the log.
+                <strong className="text-spotter-cream/95">Total miles driving today</strong> — miles <em>you</em> drove
+                this shift (solo). Often the number you put by the truck/trailer line on the log.
               </li>
               <li>
-                <strong>Total mileage today</strong> — distance the <em>truck</em> moved in the 24h period.{" "}
-                <strong>Solo:</strong> usually same as driving miles. <strong>Team:</strong> includes both drivers&apos;
-                miles combined.
+                <strong className="text-spotter-cream/95">Total mileage today</strong> — distance the <em>truck</em>{" "}
+                moved in the 24h period. <strong>Solo:</strong> usually same as driving miles. <strong>Team:</strong>{" "}
+                includes both drivers&apos; miles combined.
               </li>
             </ul>
-            <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-[10px] text-slate-800">
-              <div className="text-center text-slate-500">On paper (odometer)</div>
+            <div className="mt-3 rounded-lg border border-white/10 bg-spotter-bg/80 px-3 py-2 font-mono text-[10px] text-spotter-cream/90">
+              <div className="text-center text-spotter-cream/45">On paper (odometer)</div>
               <div className="mt-1 flex flex-wrap items-center justify-center gap-1">
                 <span>ending odometer</span>
                 <span aria-hidden="true">−</span>
                 <span>starting odometer</span>
                 <span>=</span>
-                <span className="font-semibold text-eld-teal">total mileage</span>
+                <span className="font-semibold text-spotter-turquoise">total mileage</span>
               </div>
             </div>
           </div>
 
           <label className="block sm:col-span-2">
-            <span className="text-sm font-medium text-slate-700">DVL or manifest number</span>
+            <span className="ui-label-dark">DVL or manifest number</span>
             <input
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark"
               value={values.shipping_manifest ?? ""}
               onChange={(e) => setValues({ ...values, shipping_manifest: e.target.value })}
             />
           </label>
           <label className="block sm:col-span-2">
-            <span className="text-sm font-medium text-slate-700">Shipper &amp; commodity</span>
+            <span className="ui-label-dark">Shipper &amp; commodity</span>
             <input
-              className="mt-1 w-full rounded-xl border border-white bg-white px-3 py-2 text-slate-900 outline-none ring-eld-teal/30 focus:ring-2"
+              className="ui-input-dark"
               value={values.shipper_commodity ?? ""}
               onChange={(e) => setValues({ ...values, shipper_commodity: e.target.value })}
             />
@@ -241,14 +247,15 @@ export function TripForm(props: {
         </div>
       </details>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
+      <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={props.loading}
-          className="rounded-xl bg-eld-accent px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl bg-eld-accent px-8 py-3 text-sm font-semibold text-white shadow-coral transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {props.loading ? "Planning…" : "Plan trip"}
         </button>
+        <span className="text-xs text-spotter-cream/40">Turquoise route · coral CTAs</span>
       </div>
     </form>
   );

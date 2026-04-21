@@ -6,7 +6,28 @@
   html {
     @apply antialiased;
   }
+  /**
+   * Spotter.ai–style deep navy canvas (#13242c) with subtle turquoise / coral glows.
+   */
   body {
-    @apply min-h-screen bg-gradient-to-br from-eld-mist/40 via-white to-white text-slate-900;
+    @apply min-h-screen text-spotter-cream;
+    background-color: #13242c;
+    background-image:
+      radial-gradient(ellipse 100% 70% at 100% -15%, rgba(64, 224, 208, 0.14), transparent 52%),
+      radial-gradient(ellipse 90% 55% at -5% 105%, rgba(248, 73, 96, 0.1), transparent 48%),
+      linear-gradient(165deg, #0a1218 0%, #13242c 38%, #152a33 100%);
+  }
+}
+
+@layer components {
+  .ui-input-dark {
+    @apply mt-1 w-full rounded-xl border border-white/10 bg-spotter-deep/70 px-3 py-2.5 text-spotter-cream placeholder:text-slate-500 outline-none transition-colors;
+    @apply focus:border-spotter-turquoise/50 focus:ring-2 focus:ring-spotter-turquoise/25;
+  }
+  .ui-label-dark {
+    @apply text-sm font-medium text-spotter-cream/90;
+  }
+  .ui-pill {
+    @apply inline-flex items-center rounded-full border border-white/20 bg-transparent px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-spotter-cream/80;
   }
 }
