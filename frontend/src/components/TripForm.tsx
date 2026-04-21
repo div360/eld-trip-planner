@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import type { TripPlanRequest } from "../types/trip";
 import { loadPersistedForm, savePersistedForm } from "../utils/tripPersist";
+import { TruckIcon } from "./DecorIcons";
 import { LocationCombobox } from "./LocationCombobox";
 
 function mergeForm(stored: Partial<TripPlanRequest>): TripPlanRequest {
@@ -30,6 +31,9 @@ function emptyForm(): TripPlanRequest {
 export function TripForm(props: {
   loading: boolean;
   onSubmit: (values: TripPlanRequest) => void;
+  /** When true, show “Start new trip” to clear saved plan + form */
+  hasSavedPlan?: boolean;
+  onStartNewTrip?: () => void;
 }) {
   const [values, setValues] = useState<TripPlanRequest>(() => {
     const s = loadPersistedForm();
@@ -59,15 +63,20 @@ export function TripForm(props: {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-3xl border border-white/10 bg-spotter-surface/45 p-6 shadow-glass backdrop-blur-xl sm:p-8"
+      className="ui-panel motion-safe:hover:translate-y-[-2px] p-6 sm:p-8"
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="ui-pill">Inputs</span>
-        <span className="ui-pill">70h / 8-day</span>
-        <span className="ui-pill">FMCSA</span>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+        <div
+          className="mx-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-spotter-turquoise/30 bg-gradient-to-br from-spotter-turquoise/15 to-eld-accent/[0.08] text-spotter-turquoise shadow-[0_0_28px_-10px_rgba(64,224,208,0.35)] sm:mx-0"
+          aria-hidden
+        >
+          <TruckIcon className="h-9 w-11" />
+        </div>
+        <div className="min-w-0 flex-1 text-center sm:text-left">
+          <h2 className="text-xl font-semibold tracking-tight text-white">Trip &amp; vehicle</h2>
+        </div>
       </div>
-      <h2 className="mt-4 text-xl font-semibold tracking-tight text-white">Trip &amp; vehicle</h2>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-spotter-cream/65">
+      <p className="mt-5 max-w-2xl text-sm leading-relaxed text-spotter-cream/65 sm:mt-4">
         Required fields match the daily log basics. Carrier, trailers, mileage overrides, and shipping details are
         optional. Planning uses a US property-carrying 70 h / 8-day model (no adverse conditions), fuel about every
         1,000 trip miles, and 1 h on-duty at pickup plus 1 h at dropoff — details repeat on your result summary.
@@ -145,10 +154,16 @@ export function TripForm(props: {
         </label>
       </div>
 
-      <details className="mt-6 rounded-2xl border border-white/10 bg-spotter-deep/50 p-4 backdrop-blur-sm">
-        <summary className="cursor-pointer text-sm font-semibold text-spotter-turquoise">
-          Advanced — carrier, trailers, mileage, shipping
+      <details className="group mt-6 overflow-hidden rounded-2xl border border-white/[0.08] bg-spotter-deep/40 backdrop-blur-sm transition-all duration-300 open:border-spotter-turquoise/20 open:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-spotter-turquoise transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden">
+          <span className="inline-flex items-center gap-2">
+            Advanced — carrier, trailers, mileage, shipping
+            <span className="text-[10px] text-spotter-turquoise/50 transition group-open:rotate-180 motion-safe:duration-300">
+              ▼
+            </span>
+          </span>
         </summary>
+        <div className="border-t border-white/[0.06] px-4 pb-4 pt-2 sm:px-5">
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block sm:col-span-2">
             <span className="ui-label-dark">Name of carrier or carriers</span>
@@ -268,26 +283,52 @@ export function TripForm(props: {
             />
           </label>
         </div>
+        </div>
       </details>
 
       {formError ? (
         <div
           role="alert"
-          className="mt-6 rounded-xl border border-amber-500/35 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-100/95"
+          className="motion-safe:animate-fade-in mt-6 rounded-xl border border-amber-400/30 bg-amber-950/45 px-4 py-2.5 text-sm text-amber-50/95 shadow-[0_0_24px_-8px_rgba(251,191,36,0.2)]"
         >
           {formError}
         </div>
       ) : null}
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={props.loading}
-          className="rounded-xl bg-eld-accent px-8 py-3 text-sm font-semibold text-white shadow-coral transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {props.loading ? "Planning…" : "Plan trip"}
-        </button>
-        <span className="text-xs text-spotter-cream/40">Turquoise route · coral CTAs</span>
+      <div className="mt-8 space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="submit" disabled={props.loading} className="ui-btn-primary min-w-[9rem]">
+            <span className="inline-flex items-center justify-center gap-2">
+              {props.loading ? (
+                <>
+                  <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Planning…
+                </>
+              ) : (
+                "Plan trip"
+              )}
+            </span>
+          </button>
+          {props.hasSavedPlan && props.onStartNewTrip ? (
+            <button
+              type="button"
+              disabled={props.loading}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Start a new trip? This clears your saved plan, form fields, and trip results in this browser.",
+                  )
+                ) {
+                  props.onStartNewTrip?.();
+                }
+              }}
+              className="rounded-xl border border-white/20 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-spotter-cream/90 transition hover:border-eld-accent/45 hover:bg-eld-accent/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Start new trip
+            </button>
+          ) : null}
+        </div>
+        <p className="text-xs text-spotter-cream/35">Route preview uses turquoise · actions use coral</p>
       </div>
     </form>
   );

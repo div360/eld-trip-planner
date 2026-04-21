@@ -21,7 +21,7 @@
 
 @layer components {
   .ui-input-dark {
-    @apply mt-1 w-full rounded-xl border border-white/10 bg-spotter-deep/70 px-3 py-2.5 text-spotter-cream placeholder:text-slate-500 outline-none transition-colors;
+    @apply mt-1 w-full rounded-xl border border-white/10 bg-spotter-deep/70 px-3 py-2.5 text-spotter-cream placeholder:text-slate-500 outline-none transition-colors duration-300;
     @apply focus:border-spotter-turquoise/50 focus:ring-2 focus:ring-spotter-turquoise/25;
   }
   .ui-label-dark {
@@ -29,5 +29,16 @@
   }
   .ui-pill {
     @apply inline-flex items-center rounded-full border border-white/20 bg-transparent px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-spotter-cream/80;
+  }
+  /** Glass panels — hover lift + turquoise rim */
+  .ui-panel {
+    @apply rounded-3xl border border-white/[0.09] bg-spotter-surface/40 shadow-glass backdrop-blur-xl;
+    @apply transition-all duration-500 ease-out;
+    @apply hover:border-spotter-turquoise/20 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.45),0_0_40px_-12px_rgba(64,224,208,0.12)];
+  }
+  .ui-btn-primary {
+    @apply rounded-xl bg-eld-accent px-8 py-3 text-sm font-semibold text-white shadow-coral;
+    @apply transition duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98];
+    @apply disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100;
   }
 }

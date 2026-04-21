@@ -34,6 +34,44 @@ module.exports = {
       borderRadius: {
         "4xl": "2rem",
       },
+      keyframes: {
+        fadeUp: {
+          "0%": { opacity: "0", transform: "translateY(18px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        floatGlow: {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "40%": { transform: "translate(3%, -4%) scale(1.04)" },
+          "70%": { transform: "translate(-4%, 3%) scale(0.96)" },
+        },
+        iconBob: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        },
+        borderGlow: {
+          "0%, 100%": { opacity: "0.5" },
+          "50%": { opacity: "1" },
+        },
+        truckAlong: {
+          "0%": { left: "0.25rem" },
+          "100%": { left: "calc(100% - 3.85rem)" },
+        },
+      },
+      animation: {
+        "fade-up": "fadeUp 0.75s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "fade-up-slow": "fadeUp 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both",
+        "fade-in": "fadeIn 0.5s ease-out both",
+        "float-glow": "floatGlow 22s ease-in-out infinite",
+        "float-glow-delayed": "floatGlow 26s ease-in-out infinite reverse",
+        "icon-bob": "iconBob 4s ease-in-out infinite",
+        "icon-bob-delay": "iconBob 4.5s ease-in-out 0.6s infinite",
+        "border-glow": "borderGlow 5s ease-in-out infinite",
+        "truck-along": "truckAlong 2.3s ease-in-out infinite alternate",
+      },
     },
   },
 };
