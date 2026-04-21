@@ -1,0 +1,3 @@
+# Use when Railway "Root Directory" is `backend` (or this file lives at repo root as sole Procfile).
+# Clear any custom "Start Command" in Railway so this is used, OR duplicate the command there.
+web: sh -c "python manage.py migrate --noinput && exec python -m gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"
